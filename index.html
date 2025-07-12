@@ -36,7 +36,7 @@
     let npcPrices = {};
 
     async function fetchProfiles() {
-      const response = await fetch(`https://api.hypixel.net/skyblock/profiles?key=${API_KEY}&uuid=f7b7497b-ab7e-48b0-8f9a-5e88d332d2ef`);
+      const response = await fetch(`https://api.hypixel.net/skyblock/profiles?key=${API_KEY}&uuid=f7b7497bab7e48b08f9a5e88d332d2ef`);
       const data = await response.json();
       profiles = data.profiles || [];
       const select = document.getElementById("profileSelect");
