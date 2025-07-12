@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>SkyBlock Flipper</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <h1>SkyBlock Flipper</h1>
+  <div>
+    <label for="profileSelect">Choose Profile:</label>
+    <select id="profileSelect"></select>
+  </div>
+  <div>
+    <label for="modeSelect">Flip Mode:</label>
+    <select id="modeSelect">
+      <option value="bazaar">Bazaar Flip</option>
+      <option value="npc">NPC Sell</option>
+    </select>
+  </div>
+  <div>
+    <label for="itemSelect">Choose Item:</label>
+    <select id="itemSelect"></select>
+  </div>
+  <button onclick="calculateFlip()">Calculate</button>
+
+  <div id="results"></div>
+
+  <script>
+    const API_KEY = "d8c8c411-4173-4aca-87bc-65bc7d2f4dd1"; // Replace if regenerated
+
+    let profiles = [];
+    let coins = 0;
+    let bazaarData = {};
+    let npcPrices = {};
+
+    async function fetchProfiles() {
+      const response = await fetch(`https://api.hypixel.net/skyblock/profiles?key=${API_KEY}&uuid=f7b7497b-ab7e-48b0-8f9a-5e88d332d2ef`);
+      const data = await response.json();
+      profiles = data.profiles || [];
+      const select = document.getElementById("profileSelect");
+      profiles.forEach((profile, index) => {
+        const option = document.createElement("option");
+        option.value = index;
+        option.text = profile.cute_name;
+        select.appendChild(option);
+      });
+    }
+
+    async function fetchBazaar() {
+      const response = await fetch("https://api.hypixel.net/skyblock/bazaar");
+      const data = await response.json();
+      bazaarData = data.products || {};
+      const itemSelect = document.getElementById("itemSelect");
+      Object.keys(bazaarData).forEach((item) => {
+        const option = document.createElement("option");
+        option.value = item;
+        option.text = item;
+        itemSelect.appendChild(option);
+      });
+    }
+
+    async function fetchNPCPrices() {
+      const response = await fetch("https://sky.coflnet.com/api/npc/price/all");
+      npcPrices = await response.json();
+    }
+
+    async function calculateFlip() {
+      const profileIndex = document.getElementById("profileSelect").value;
+      const profile = profiles[profileIndex];
+      const purse = profile.members[profile.uuid].coin_purse;
+
+      coins = purse;
+      const itemId = document.getElementById("itemSelect").value;
+      const mode = document.getElementById("modeSelect").value;
+
+      let pricePerUnit = 0;
+      if (mode === "bazaar") {
+        pricePerUnit = bazaarData[itemId]?.quick_status?.buyPrice || 0;
+      } else if (mode === "npc") {
+        pricePerUnit = npcPrices[itemId] || 0;
+      }
+
+      if (!pricePerUnit || pricePerUnit <= 0) {
+        document.getElementById("results").innerText = "Invalid item or price data.";
+        return;
+      }
+
+      const maxBuy = Math.floor(coins / pricePerUnit);
+      const totalSpent = maxBuy * pricePerUnit;
+      const leftover = coins - totalSpent;
+
+      document.getElementById("results").innerHTML = `
+        <p><strong>Item:</strong> ${itemId}</p>
+        <p><strong>Price per Unit:</strong> ${pricePerUnit.toFixed(2)}</p>
+        <p><strong>Coins:</strong> ${coins.toFixed(2)}</p>
+        <p><strong>Max Buyable:</strong> ${maxBuy}</p>
+        <p><strong>Total Cost:</strong> ${totalSpent.toFixed(2)}</p>
+        <p><strong>Leftover Coins:</strong> ${leftover.toFixed(2)}</p>
+      `;
+    }
+
+    fetchBazaar();
+    fetchNPCPrices();
+    // Replace YOUR_UUID_HERE below with your Minecraft UUID
+    fetchProfiles();
+  </script>
+</body>
+</html>
